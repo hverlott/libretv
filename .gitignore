@@ -1,0 +1,26 @@
+node_modules/
+.next/
+out/
+.env
+.env*.local
+*.tsbuildinfo
+vitest-results.json
+*.log
+
+# 运行期数据：进程 PID / 日志 / 本地漫画索引缓存（可随时重建）
+.runtime/
+
+# AI 工具产物（本机会话/缓存数据，不入库）
+.mimosa/
+.zcode/
+.codebuddy/
+generated-images/
+
+# WorkBuddy 项目记忆（含个人笔记、内网地址等，绝不入库）
+.workbuddy/
+
+# Playwright/Edge 测试用的临时浏览器 profile（含缓存与历史，绝不能入库）
+client/.edge-test/
+
+# 临时下载/测试产物
+tmp_dl/
