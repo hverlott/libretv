@@ -1,0 +1,27 @@
+# LibreTV Custom — hverlott/libretv
+
+> An independent AGPL-3.0-or-later modification of LibreSpark/LibreTV v2.19.7: self-hosted video search and playback, M3U/IPTV, online and local manga, optional ratings, and LAN browser access. Supports Android Termux, Windows, and Docker deployment.
+
+## Project documentation
+
+- [Chinese overview](https://github.com/hverlott/libretv/blob/main/README.md): project identity, capabilities, branches, deployment and limitations.
+- [English overview](https://github.com/hverlott/libretv/blob/main/README.en.md): English introduction and setup.
+- [FAQ](https://github.com/hverlott/libretv/blob/main/FAQ.md): Android, local comics, browser data, Docker and provider availability.
+- [Local deployment](https://github.com/hverlott/libretv/blob/main/DEPLOY_LOCAL.md): local service setup and controls.
+- [Privacy](https://github.com/hverlott/libretv/blob/main/PRIVACY.md): implementation-specific data handling.
+- [License](https://github.com/hverlott/libretv/blob/main/LICENSE): software license.
+
+## Android mobile branch
+
+- [Android branch](https://github.com/hverlott/libretv/tree/android-mobile): mobile navigation and manga reader improvements; maintained separately from main.
+- [Android deployment](https://github.com/hverlott/libretv/blob/android-mobile/ANDROID.md): build on a computer, run in Termux, service supervision and prerequisites.
+
+## Primary references
+
+- [Repository](https://github.com/hverlott/libretv): source and branch history.
+- [Releases](https://github.com/hverlott/libretv/releases): published versions; may differ from latest branch contents.
+- [Upstream LibreTV](https://github.com/LibreSpark/LibreTV): original project, maintained independently.
+
+## Scope
+
+Not an official Android APK or a hosted media catalogue. Third-party provider availability varies. Browser history and preferences do not automatically sync across devices. Performance and continuous background operation depend on the deployment. This file is a documentation index, not a guarantee of search or AI indexing.
