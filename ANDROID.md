@@ -173,3 +173,24 @@ adb 能做的已经做了（电池优化白名单 `cmd deviceidle whitelist +com
 - **`curl` 下载 GitHub release 报 `CONNECT tunnel failed, response 502`**：本机 `HTTPS_PROXY` 挂了，
   加 `--noproxy '*'` 直连即可。
 - **f-droid.org 不通**，Termux 的包要从 `packages-cf.termux.dev` 拿（这条通）。
+
+## android-mobile 分支
+
+本分支为手机使用补充底部导航（首页、直播、搜索、历史、更多），把漫画、系统、下载等入口放入更多面板。播放页底部提供选集与换源；手机设置全屏显示，输入框使用 16px 字号，主要按钮触控高度至少 44px，并适配底部安全区。桌面继续使用顶部导航。
+
+扩展片源清单为 `public/android-sources.json`。六个新增点播接口经过手机网络搜索、HLS 清单和分片读取抽查，六份新增地区直播列表可读取。它们是第三方资源入口，部分是同站不同入口或备用域名；接口数量不代表独立片库数量，也不保证每部影片或每个频道都能播放。
+
+部署后在 Termux 的 `~/libretv` 中运行：
+
+```sh
+node scripts/configure-android-sources.mjs          # 预览合并数量
+node scripts/configure-android-sources.mjs --write  # 保留原顺序，按 URL 去重追加
+cp scripts/start-android.sh ~/start-server.sh
+chmod +x ~/start-server.sh
+```
+
+写配置前自动生成权限为 600 的 `.env.before-android-*` 备份。原点播源顺序保持不变，避免 `env_N` 标识改变导致历史记录指向错误来源。请勿把 `.env` 或其备份提交到仓库。
+
+`~/start-server.sh` 使用文件锁保证单实例，启动 `scripts/termux-supervisor.cjs`。异常退出时按 3 秒起步逐步退避，最大 60 秒；正常退出停止守护。日志位于 `.runtime/termux-server.log`，每份约 2 MiB，保留两份历史日志。原 Termux:Boot 入口可继续调用 `~/start-server.sh`。
+
+修改源码后需重新执行 `npm run build:standalone` 与 `npm run pack:standalone`，将完整运行包部署到手机。替换前停止守护，备份整个旧目录，并保留手机侧 `.env`、本地 IPTV 清单和 `.runtime` 数据。桌面构建产物中的平台原生依赖不能作为 Android 编译器使用；手机仅运行已构建的 JavaScript。
