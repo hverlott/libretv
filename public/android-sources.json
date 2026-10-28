@@ -1,0 +1,57 @@
+{
+  "name": "Android 海外影视扩展",
+  "version": 2,
+  "sources": [
+    {
+      "name": "魔都（备用域名）",
+      "url": "https://www.moduzy.com/api.php/provide/vod"
+    },
+    {
+      "name": "jszy",
+      "url": "https://jszyapi.com/api.php/provide/vod/from/jsm3u8"
+    },
+    {
+      "name": "金鹰资源（M3U8入口）",
+      "url": "https://jyzyapi.com/provide/vod/from/jinyingm3u8"
+    },
+    {
+      "name": "如意资源",
+      "url": "https://cj.rycjapi.com/api.php/provide/vod",
+      "detail": "https://www.ryzyw.com"
+    },
+    {
+      "name": "金鹰资源（新接口）",
+      "url": "https://jyzyapi.com/provide/vod"
+    },
+    {
+      "name": "红牛（备用域名）",
+      "url": "https://www.hongniuzy3.com/api.php/provide/vod"
+    }
+  ],
+  "liveSources": [
+    {
+      "name": "海外美国 · iptv-org",
+      "url": "https://iptv-org.github.io/iptv/countries/us.m3u"
+    },
+    {
+      "name": "海外英国 · iptv-org",
+      "url": "https://iptv-org.github.io/iptv/countries/uk.m3u"
+    },
+    {
+      "name": "海外日本 · iptv-org",
+      "url": "https://iptv-org.github.io/iptv/countries/jp.m3u"
+    },
+    {
+      "name": "海外韩国 · iptv-org",
+      "url": "https://iptv-org.github.io/iptv/countries/kr.m3u"
+    },
+    {
+      "name": "海外法国 · iptv-org",
+      "url": "https://iptv-org.github.io/iptv/countries/fr.m3u"
+    },
+    {
+      "name": "海外德国 · iptv-org",
+      "url": "https://iptv-org.github.io/iptv/countries/de.m3u"
+    }
+  ]
+}
