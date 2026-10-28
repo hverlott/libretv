@@ -51,9 +51,10 @@ function MangaContent() {
   const lang = searchParams.get('lang') || '';
   const originRaw = (searchParams.get('origin') || '').trim();
   const origin = (isZai ? ZAI_ZONES : MANGA_ORIGINS).some((o) => o.key === originRaw) ? originRaw : '';
+  const yellowFilter = useAppStore((s) => s.yellowFilter);
   const ratingRaw = (searchParams.get('rating') || '').trim();
   // 再漫画没有分级字段，这一档只在 MangaDex 侧生效
-  const rating = !isZai && MANGA_RATINGS.some((r) => r.key === ratingRaw) ? ratingRaw : '';
+  const rating = !yellowFilter && !isZai && MANGA_RATINGS.some((r) => r.key === ratingRaw) ? ratingRaw : '';
   const tagKey = searchParams.get('tags') || '';
   const tags = useMemo(
     () => tagKey.split(',').map((s) => s.trim()).filter(Boolean),
@@ -65,13 +66,14 @@ function MangaContent() {
    * 开启时漫画侧连「含成人向」这个选项都不展示——与点播侧的成人源是同一套规则，
    * 免得出现「过滤开着但漫画这边还能手动打开」的割裂。
    */
-  const yellowFilter = useAppStore((s) => s.yellowFilter);
   const adultAllowed = !yellowFilter && !isZai;
   // 选了任一成人档位（含成人向 / 限制级）都算成人浏览，并要把档位透传给接口
   const includeAdult = adultAllowed && rating !== '';
 
   const [input, setInput] = useState(q);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterCount = [origin, demo, status, lang, rating].filter(Boolean).length + tags.length;
 
   // 输入框与 URL 同步：直接改地址栏 / 返回时也要回显
   useEffect(() => setInput(q), [q]);
@@ -88,7 +90,7 @@ function MangaContent() {
    * 再漫画按 page 翻页，用页码做中间表示，换算交给服务端。
    */
   const searchQuery = useInfiniteQuery({
-    queryKey: ['manga-search', source, q, rating],
+    queryKey: ['manga-search', source, q, rating, includeAdult, yellowFilter],
     queryFn: ({ pageParam, signal }) =>
       api.mangaSearch(
         q,
@@ -104,7 +106,7 @@ function MangaContent() {
   });
 
   const browseQuery = useInfiniteQuery({
-    queryKey: ['manga-browse', source, sort, demo, status, lang, origin, rating, tagKey, includeAdult],
+    queryKey: ['manga-browse', source, sort, demo, status, lang, origin, rating, tagKey, includeAdult, yellowFilter],
     queryFn: ({ pageParam, signal }) =>
       api.mangaBrowse(
         {
@@ -140,7 +142,7 @@ function MangaContent() {
 
   // 两种形态共用一套渲染，只是数据来源不同
   const pages = (isSearch ? searchQuery.data : browseQuery.data)?.pages;
-  const items = useMemo<MangaItem[]>(() => pages?.flatMap((p) => p.items) ?? [], [pages]);
+  const items = useMemo<MangaItem[]>(() => Array.from(new Map((pages?.flatMap((p) => p.items) ?? []).map((m) => [m.id, m])).values()), [pages]);
   const total = pages?.[0]?.total ?? 0;
   const isPending = isSearch ? searchQuery.isPending : browseQuery.isPending;
   const isError = isSearch ? searchQuery.isError : browseQuery.isError;
@@ -234,7 +236,7 @@ function MangaContent() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6">
+      <main className="lt-manga-browse flex-1 w-full max-w-6xl mx-auto px-4 py-6">
         <div className="mb-5">
           <h1 className="text-xl font-semibold text-content">漫画</h1>
           <p className="text-sm text-muted mt-1">
@@ -252,6 +254,7 @@ function MangaContent() {
               type="button"
               onClick={() => switchSource(s.id)}
               title={s.hint}
+              aria-pressed={source === s.id}
               className={`px-3 py-1.5 rounded-md border text-xs transition-colors ${
                 source === s.id
                   ? 'bg-accent border-accent text-on-accent'
@@ -273,6 +276,9 @@ function MangaContent() {
         >
           <input
             type="search"
+            aria-label="搜索漫画"
+            enterKeyHint="search"
+            maxLength={60}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="输入漫画名称（英文或中文）..."
@@ -302,6 +308,7 @@ function MangaContent() {
             error={error}
             isFetching={isFetchingNextPage}
             onLoadMore={loadMore}
+            onRetry={() => { void (isSearch ? searchQuery : browseQuery).refetch(); }}
             onOpen={openManga}
             emptyHint={`没有找到「${q}」相关漫画。试试英文名称？`}
           />
@@ -320,6 +327,11 @@ function MangaContent() {
               ))}
             </div>
 
+            <details className="lt-manga-filters" open={filtersOpen} onToggle={(e) => setFiltersOpen(e.currentTarget.open)}>
+              <summary>分类筛选{filterCount > 0 ? ` · 已选 ${filterCount} 项` : ' · 地区、题材与状态'}</summary>
+              <div className="pt-3">
+                <button type="button" className="btn-ghost mb-3" disabled={filterCount === 0}
+                  onClick={() => patchParams({ origin: null, demo: null, status: null, lang: null, rating: null, tags: null })}>重置分类筛选</button>
             {/* 地区 / 受众 / 状态 / 语言 / 分级 */}
             <div className="space-y-2 mb-4">
               <FilterRow
@@ -413,6 +425,8 @@ function MangaContent() {
               </div>
             )}
 
+              </div>
+            </details>
             <MangaGrid
               items={items}
               total={total}
@@ -422,6 +436,7 @@ function MangaContent() {
               error={error}
               isFetching={isFetchingNextPage}
               onLoadMore={loadMore}
+              onRetry={() => { void (isSearch ? searchQuery : browseQuery).refetch(); }}
               onOpen={openManga}
               emptyHint="当前筛选条件下没有漫画，试着减少标签或换一种排序。"
             />
@@ -448,6 +463,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`px-2.5 py-1 rounded-md border text-xs transition-colors ${
         active
           ? 'bg-accent border-accent text-on-accent'
@@ -475,13 +491,13 @@ function FilterRow({
   hint?: string;
 }) {
   return (
-    <div className="flex items-start gap-2">
+    <div className="lt-manga-filter-row flex items-start gap-2" role="group" aria-label={`${label}筛选`}>
       <span className="text-xs text-faint w-8 shrink-0 pt-1.5">{label}</span>
       <div className="flex flex-wrap items-center gap-1.5">
         <FilterChip active={!value} onClick={() => onChange(null)}>
           全部
         </FilterChip>
-        {options.map((o) => (
+        {options.filter((o) => o.key !== '').map((o) => (
           <FilterChip
             key={o.key}
             active={value === o.key}
@@ -532,6 +548,7 @@ function MangaGrid({
   error,
   isFetching,
   onLoadMore,
+  onRetry,
   onOpen,
   emptyHint,
 }: {
@@ -543,6 +560,7 @@ function MangaGrid({
   error: Error | null;
   isFetching: boolean;
   onLoadMore: () => void;
+  onRetry: () => void;
   onOpen: (id: string) => void;
   emptyHint: string;
 }) {
@@ -557,7 +575,8 @@ function MangaGrid({
   if (isError) {
     return (
       <div className="text-center py-16 text-sm text-muted">
-        加载失败：{error?.message || '请稍后重试'}
+        <p>加载失败：{error?.message || '请稍后重试'}</p>
+        <button type="button" className="btn-primary mt-4" onClick={onRetry}>重新加载</button>
       </div>
     );
   }
@@ -573,7 +592,7 @@ function MangaGrid({
           共 {total} 部{total > items.length ? `，已显示 ${items.length}` : ''}
         </p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+      <div className="lt-manga-grid grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3" aria-label="漫画列表" aria-busy={isFetching}>
         {items.map((m) => (
           <MangaCard key={m.id} manga={m} onClick={() => onOpen(m.id)} />
         ))}
@@ -651,7 +670,11 @@ export default function MangaPage() {
 function MangaRoute() {
   const searchParams = useSearchParams();
   const id = (searchParams.get('id') || '').trim();
-  if (id) return <MangaDetail id={id} />;
+  if (id) return <div className="min-h-screen flex flex-col">
+    <Header />
+    <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6"><MangaDetail id={id} /></main>
+    <SiteFooter />
+  </div>;
   return <MangaContent />;
 }
 
@@ -687,6 +710,7 @@ function MangaDetail({ id }: { id: string }) {
   // 详情接口不传 source 时服务端会按 id 形态推断，响应里回传实际用的源
   const detailSource = manga?.source ?? 'mangadex';
   const detailIsZai = detailSource === 'zaimanhua';
+  const initialChapter = manga?.chapters.find(c => Number(c.number) === 1) ?? manga?.chapters.find(c => c.number !== null) ?? manga?.chapters[0];
 
   const readFrom = useCallback(
     (chapterId: string) => {
@@ -792,9 +816,9 @@ function MangaDetail({ id }: { id: string }) {
               type="button"
               className="btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-40"
               disabled={!manga.chapters?.length}
-              onClick={() => readFrom(manga.chapters[0].id)}
+              onClick={() => { if (initialChapter) readFrom(initialChapter.id); }}
             >
-              {manga.chapters?.length ? `开始阅读（第 1 话 / 共 ${manga.chapters.length} 话）` : '暂无章节'}
+              {manga.chapters?.length ? `开始阅读（${initialChapter?.number ? `第 ${initialChapter.number} 话` : '特别篇'} / 共 ${manga.chapters.length} 话）` : '暂无章节'}
             </button>
             <button
               type="button"
