@@ -99,10 +99,16 @@ console.log(`[*] 输出目录：${OUT}`);
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
-cpSync(STANDALONE, OUT, { recursive: true });
+cpSync(STANDALONE, OUT, { recursive: true, verbatimSymlinks: true });
 // 静态资源与 public 不在 standalone 里，必须单独补（Dockerfile 也是这么做的）
 cpSync(join(ROOT, '.next', 'static'), join(OUT, '.next', 'static'), { recursive: true });
 cpSync(join(ROOT, 'public'), join(OUT, 'public'), { recursive: true });
+// Operational scripts are not necessarily reachable by Next.js file tracing.
+mkdirSync(join(OUT, 'scripts'), { recursive: true });
+for (const file of ['ctl.mjs', 'configure-android-sources.mjs', 'start-android.sh', 'termux-supervisor.cjs']) {
+  cpSync(join(ROOT, 'scripts', file), join(OUT, 'scripts', file));
+}
+
 
 // —— 3. 清理不该带走的东西 ——
 const removed = [];
