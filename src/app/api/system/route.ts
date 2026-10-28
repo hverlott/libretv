@@ -21,7 +21,6 @@ export const runtime = 'nodejs';
  */
 
 const RUNTIME_DIR = join(process.cwd(), '.runtime');
-const PID_FILE = join(RUNTIME_DIR, 'libretv.pid');
 const PORT_FILE = join(RUNTIME_DIR, 'libretv.port');
 const STARTED_FILE = join(RUNTIME_DIR, 'libretv.started');
 const CTL_SCRIPT = join(process.cwd(), 'scripts', 'ctl.mjs');
@@ -40,25 +39,6 @@ function servicePort(): number {
     /* 忽略 */
   }
   return 8080;
-}
-
-function readPid(): number | null {
-  try {
-    if (!existsSync(PID_FILE)) return null;
-    const pid = Number(readFileSync(PID_FILE, 'utf-8').trim());
-    return Number.isInteger(pid) && pid > 0 ? pid : null;
-  } catch {
-    return null;
-  }
-}
-
-function isAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return (err as NodeJS.ErrnoException)?.code === 'EPERM';
-  }
 }
 
 export interface SystemStatusResponse {
