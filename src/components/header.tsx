@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { MobileNavigation } from './mobile-navigation';
 import { usePathname, useRouter } from 'next/navigation';
 import { ThemeToggle } from './theme';
 import { SourceManagerDrawer } from './source-manager';
@@ -40,9 +41,23 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
     submitSearch(text);
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('mobileAction');
+    if (!action) return;
+    params.delete('mobileAction');
+    window.history.replaceState(window.history.state, '', window.location.pathname + (params.size ? `?${params}` : '') + window.location.hash);
+    if (action === 'history') setHistoryOpen(true);
+    if (action === 'settings') setSettingsOpen(true);
+    if (action === 'search') {
+      const timer = window.setTimeout(() => document.querySelector<HTMLInputElement>('main input[aria-label="搜索影片"]')?.focus(), 200);
+      return () => window.clearTimeout(timer);
+    }
+  }, [pathname]);
+
   return (
     <>
-      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-line">
+      <header className="lt-site-header sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-line">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
           <Link
             href={withBasePath('/', basePath)}
@@ -159,6 +174,7 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
         </div>
       </header>
 
+      <MobileNavigation hidden={settingsOpen || historyOpen} onHistory={() => setHistoryOpen(true)} onSettings={() => setSettingsOpen(true)} />
       <SourceManagerDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </>
