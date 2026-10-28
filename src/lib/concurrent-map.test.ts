@@ -65,4 +65,17 @@ describe('mapWithConcurrency（有限并发）', () => {
     await mapWithConcurrency([1, 2], 10, async () => 'ok');
     expect(Date.now() - t0).toBeLessThan(200);
   });
+  it('slow tasks do not block free workers', async () => {
+    let release!: () => void;
+    let nextStarted!: () => void;
+    const slow = new Promise<void>((resolve) => { release = resolve; });
+    const started = new Promise<void>((resolve) => { nextStarted = resolve; });
+    const work = mapWithConcurrency([0, 1, 2], 2, async (item) => {
+      if (item === 0) await slow;
+      if (item === 2) { nextStarted(); release(); }
+      return item;
+    });
+    await started;
+    expect(await work).toEqual([0, 1, 2]);
+  });
 });
