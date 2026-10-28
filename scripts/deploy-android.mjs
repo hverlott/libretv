@@ -169,6 +169,31 @@ await new Promise((res, rej) => {
   });
 });
 
+// —— 4.5 同步启动脚本 ——
+// 把仓库里的启动脚本推到手机，让「唤醒锁 / 日志轮转 / 崩溃重启 / 防双实例」这些逻辑
+// 跟着版本走，不用再手工改手机。只在实际部署时做 —— 旁路目录测试不该动真实的自启入口。
+if (TARGET_NAME === 'libretv') {
+  step('同步启动脚本…');
+  const ANDROID_FILES = [
+    { src: 'scripts/android/start-server.sh', dest: `${TERMUX}/home/start-server.sh` },
+    { src: 'scripts/android/boot.sh', dest: `${TERMUX}/home/.termux/boot/000-libretv.sh` },
+  ];
+  run(ADB, ['shell', `run-as com.termux mkdir -p ${TERMUX}/home/.termux/boot`]);
+  for (const f of ANDROID_FILES) {
+    if (!existsSync(resolve(ROOT, f.src))) {
+      console.log(`  [!] 本地缺失，跳过: ${f.src}`);
+      continue;
+    }
+    run(ADB, ['push', f.src, '/data/local/tmp/.lv-sync.sh']);
+    run(ADB, ['shell', `run-as com.termux cp /data/local/tmp/.lv-sync.sh ${f.dest}`]);
+    run(ADB, ['shell', `run-as com.termux chmod 755 ${f.dest}`]);
+    console.log(`  ✓ ${f.dest}`);
+  }
+  run(ADB, ['shell', 'rm -f /data/local/tmp/.lv-sync.sh']);
+} else {
+  step('旁路模式，跳过启动脚本同步');
+}
+
 // —— 5. 结果 ——
 const count = run(ADB, ['shell', `run-as com.termux ls ${DEST}`]).split('\n').length;
 step(`完成：${count} 个顶层条目`);
