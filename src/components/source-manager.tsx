@@ -697,10 +697,13 @@ function HomePanel() {
   return (
     <section>
       <SectionTitle title="首页与内容过滤" />
+      <p className="lt-content-scope" role="status">
+        {store.yellowFilter ? '当前已开启成人内容过滤' : '当前未开启成人内容过滤'}
+      </p>
       <div className="space-y-3">
         <ToggleRow
           label="成人内容过滤"
-          description="过滤「伦理片」等分类的内容，作用于搜索结果与首页全部内容区"
+          description="开启后隐藏成人分类及已标记的成人源，作用于影视搜索、首页与漫画分级；关闭不会自动恢复此前停用的源"
           checked={store.yellowFilter}
           onChange={(v) => store.updateSettings({ yellowFilter: v })}
         />

@@ -26,6 +26,7 @@ export function MobileNavigation({ hidden, onHistory, onSettings, onEpisodes, on
   const [moreOpen, setMoreOpen] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const watching = !!onEpisodes;
+  const mangaBrowsing = pathname === href('/manga') || pathname.startsWith(href('/manga/'));
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -44,11 +45,11 @@ export function MobileNavigation({ hidden, onHistory, onSettings, onEpisodes, on
   }, []);
 
   const search = () => {
-    const input = document.querySelector<HTMLInputElement>('main input[aria-label="搜索影片"]');
+    const input = document.querySelector<HTMLInputElement>(mangaBrowsing ? 'main input[aria-label="搜索漫画"]' : 'main input[aria-label="搜索影片"]');
     if (input) {
       input.scrollIntoView({ block: 'center', behavior: 'smooth' });
       input.focus({ preventScroll: true });
-    } else router.push(`${href('/')}?mobileAction=search`);
+    } else router.push(`${href(mangaBrowsing ? '/manga' : '/')}?mobileAction=search`);
   };
   const panel = (name: 'history' | 'settings') => {
     const open = name === 'history' ? onHistory : onSettings;
@@ -66,12 +67,13 @@ export function MobileNavigation({ hidden, onHistory, onSettings, onEpisodes, on
       <Link href={href('/')} aria-current={pathname === href('/') ? 'page' : undefined}>
         <Icon name="home" /><span>首页</span>
       </Link>
-      {watching ? button('选集', 'layers', () => onEpisodes?.()) :
+      {watching ? button('选集', 'layers', () => onEpisodes?.()) : mangaBrowsing ?
+        <Link href={href('/manga')} aria-current={pathname === href('/manga') ? 'page' : undefined}><Icon name="layers" /><span>漫画</span></Link> :
         <Link href={href('/live')} aria-current={pathname === href('/live') ? 'page' : undefined}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path strokeWidth="1.8" strokeLinejoin="round" d="M4 7h16v14H4ZM8 2l4 5 4-5M10 11l5 3-5 3Z" /></svg><span>直播</span>
         </Link>}
       {watching ? button('换源', 'refresh', () => onSwitch?.()) : button('搜索', 'search', search)}
-      {button('历史', 'clock', () => panel('history'))}
+      {mangaBrowsing ? <Link href={href('/manga/local')} aria-current={pathname === href('/manga/local') ? 'page' : undefined}><Icon name="home" /><span>本地</span></Link> : button('历史', 'clock', () => panel('history'))}
       {button('更多', 'gear', () => setMoreOpen(true))}
     </nav>
     <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} title="更多功能">

@@ -94,24 +94,14 @@ export function Switch({
   title?: string;
 }) {
   return (
-    <button
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      title={title ?? label}
-      className={cn(
-        'relative h-[22px] w-10 shrink-0 rounded-full transition-colors duration-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-        checked ? 'bg-accent' : 'bg-chip ring-1 ring-inset ring-line'
-      )}
-      onClick={() => onChange(!checked)}
-    >
-      <span
-        className={cn(
-          'absolute left-[2px] top-[2px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-out',
-          checked ? 'translate-x-[18px]' : 'translate-x-0'
-        )}
-      />
+    <button type="button" role="switch" aria-checked={checked} aria-label={label} title={title ?? label}
+      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+      onClick={() => onChange(!checked)}>
+      <span aria-hidden="true" className={cn('relative block h-[22px] w-10 rounded-full transition-colors duration-200',
+        checked ? 'bg-accent' : 'bg-chip ring-1 ring-inset ring-line')}>
+        <span className={cn('absolute left-[2px] top-[2px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-out',
+          checked ? 'translate-x-[18px]' : 'translate-x-0')} />
+      </span>
     </button>
   );
 }

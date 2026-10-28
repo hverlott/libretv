@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { detectBasePath, withBasePath } from '@/lib/base-path';
 
 /** 顶部导航：Logo、搜索框（首页外）、历史、设置 */
-export function Header({ showSearch = false }: { showSearch?: boolean }) {
+export function Header({ showSearch = false, hideMobileNavigation = false }: { showSearch?: boolean; hideMobileNavigation?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   // 客户端（/app/ 前缀）下站内链接需带上前缀，否则会跳到控制面板自己的首页
@@ -50,7 +50,7 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
     if (action === 'history') setHistoryOpen(true);
     if (action === 'settings') setSettingsOpen(true);
     if (action === 'search') {
-      const timer = window.setTimeout(() => document.querySelector<HTMLInputElement>('main input[aria-label="搜索影片"]')?.focus(), 200);
+      const timer = window.setTimeout(() => document.querySelector<HTMLInputElement>('main input[aria-label="搜索漫画"],main input[aria-label="搜索影片"]')?.focus(), 200);
       return () => window.clearTimeout(timer);
     }
   }, [pathname]);
@@ -174,7 +174,7 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
         </div>
       </header>
 
-      <MobileNavigation hidden={settingsOpen || historyOpen} onHistory={() => setHistoryOpen(true)} onSettings={() => setSettingsOpen(true)} />
+      {!hideMobileNavigation && <MobileNavigation hidden={settingsOpen || historyOpen} onHistory={() => setHistoryOpen(true)} onSettings={() => setSettingsOpen(true)} />}
       <SourceManagerDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </>
