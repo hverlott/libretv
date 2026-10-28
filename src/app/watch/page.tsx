@@ -16,6 +16,7 @@ const PlayerShell = dynamic(() => import('@/components/player-shell').then((m) =
   ),
 });
 import { EmptyState, LoadingState, Spinner } from '@/components/states';
+import { MobileNavigation } from '@/components/mobile-navigation';
 import { SwitchSourceModal } from '@/components/switch-source';
 import { BackButton } from '@/components/back-button';
 import { markRecordReplace } from '@/lib/nav-history';
@@ -223,7 +224,7 @@ function WatchContent() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-line">
+      <header className="lt-watch-header sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-line">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
           {/* 桌面客户端没有浏览器后退键：带文字的返回比纯图标可靠得多 */}
           <BackButton withLabel />
@@ -330,7 +331,7 @@ function WatchContent() {
           </div>
 
           {/* 剧集侧栏 */}
-          <aside className="bg-surface-raised rounded-lg p-3 h-fit">
+          <aside id="mobile-episodes" className="bg-surface-raised rounded-lg p-3 h-fit">
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <h2 className="text-sm font-semibold text-content">
                 剧集列表{episodes.length > 0 && `（${episodes.length}）`}
@@ -358,7 +359,7 @@ function WatchContent() {
                 <EmptyState variant="plain" title={detailQuery.isError ? '获取剧集失败' : '暂无剧集信息'} />
               )
             ) : (
-              <div className="grid grid-cols-5 lg:grid-cols-4 gap-1.5 max-h-[65vh] overflow-y-auto scrollbar-thin pr-1">
+              <div className="lt-episode-grid grid grid-cols-4 lg:grid-cols-4 gap-1.5 max-h-[65vh] overflow-y-auto scrollbar-thin pr-1">
                 {orderedEpisodes.map((realIndex) => (
                   <EpisodeButton
                     key={realIndex}
@@ -376,6 +377,7 @@ function WatchContent() {
         </div>
       </main>
 
+      <MobileNavigation hidden={switchOpen} onEpisodes={() => document.getElementById('mobile-episodes')?.scrollIntoView({ block: 'start', behavior: 'smooth' })} onSwitch={() => setSwitchOpen(true)} />
       {switchOpen && (
         <SwitchSourceModal
           currentTitle={videoTitle}
