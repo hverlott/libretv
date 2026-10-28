@@ -1,0 +1,71 @@
+/* LibreTV 2.19.7 mobile adaptation. Desktop remains governed by the app. */
+#lt-mobile-nav{display:none}
+@media(max-width:767px){
+ html{scroll-padding-top:76px;scroll-padding-bottom:90px}
+ body:has(#lt-mobile-nav){padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
+ button,a,input,select,textarea{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+ input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px!important;min-height:44px}
+ button:not(.art-control):not([class*=art-]),.btn-primary,.btn-ghost,[role=tab]{min-height:44px}
+ button:focus-visible,a:focus-visible{outline:2px solid rgb(var(--c-accent));outline-offset:3px}
+ header.sticky>div{padding-left:16px;padding-right:16px;gap:8px;min-width:0}
+ header.lt-site-header nav>a,
+ header.lt-site-header nav>button:not([aria-label="设置"]):not([aria-label^="切换主题"]){display:none}
+ header.sticky a[aria-label="LibreTV 首页"]::after{content:'LibreTV';font-size:19px;font-weight:750;letter-spacing:-.7px;margin-left:9px;color:rgb(var(--c-content))}
+ header.sticky nav{gap:4px}
+ header.sticky nav>button{width:44px;height:44px}
+ main{padding:16px 16px 24px!important;min-width:0}
+ main>section:first-of-type:has(input[aria-label="搜索影片"]){margin-top:8px;margin-bottom:24px;align-items:stretch}
+ main>section:first-of-type:has(input[aria-label="搜索影片"])>header{text-align:left;margin-bottom:14px}
+ main>section:first-of-type:has(input[aria-label="搜索影片"]) h1{font-size:28px;line-height:1.25;letter-spacing:-.8px}
+ main>section:first-of-type:has(input[aria-label="搜索影片"]) h1::after{content:'发现下一部好片';display:block;font-size:13px;line-height:1.6;font-weight:400;letter-spacing:.2px;color:rgb(var(--c-muted));background:none;-webkit-text-fill-color:rgb(var(--c-muted));margin-top:6px}
+ form:has(input[aria-label="搜索影片"])>div{min-height:52px;border-radius:16px}
+ form:has(input[aria-label="搜索影片"]) button{min-width:76px}
+ section[aria-label="影视榜单推荐"]>div:first-child,
+ section[aria-label="热门剧集"]>div.flex.flex-wrap{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;gap:8px;padding-bottom:6px;scrollbar-width:none}
+ section[aria-label="影视榜单推荐"]>div:first-child>button,
+ section[aria-label="热门剧集"]>div.flex.flex-wrap>button{flex-shrink:0;white-space:nowrap;padding:8px 14px;font-size:13px;min-height:40px}
+ .card{border-radius:12px}
+ .card [title]{font-size:13px;line-height:1.45}
+ .card:hover{transform:none!important}
+ .card>div:last-child{padding:9px}
+ section[aria-label="影视榜单推荐"]>.grid{gap:10px}
+ section[aria-label="热门剧集"]{margin-top:28px}
+ section[aria-label="热门剧集"] h2{font-size:16px;font-weight:650;color:rgb(var(--c-content))}
+ section[aria-label="热门剧集"] h2>span{display:block;font-size:11px;font-weight:400;margin-top:4px}
+ [role="dialog"][aria-label="设置"],[role="dialog"][aria-label="观看历史"]{max-width:none!important;width:100%!important;height:100dvh!important;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+ [role="dialog"]{max-width:100%;overscroll-behavior:contain}
+ [role="dialog"] [aria-label="关闭"]{min-width:44px;min-height:44px}
+ [role="dialog"] [role="tab"]{font-size:14px;min-height:44px}
+ [role="dialog"] label:has(input[type=checkbox]){min-height:44px;align-items:center}
+ [role="dialog"] input[type=checkbox]{width:20px;height:20px;flex-shrink:0}
+ [role="dialog"] [role="list"]{overscroll-behavior:contain}
+ [role="dialog"] [role="listitem"]{min-height:64px}
+ [role="dialog"][aria-label$="详情"]{border-radius:20px 20px 0 0;max-height:92dvh;overflow-y:auto;margin-top:auto;margin-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+ div.fixed:has(>[role="dialog"][aria-label$="详情"]){padding:8dvh 0 0!important;align-items:flex-end!important}
+ [role="dialog"][aria-label$="详情"]>div:first-child{position:sticky;top:0;z-index:2;background:rgb(var(--c-surface-raised));padding:12px 16px;border-radius:20px 20px 0 0}
+ [role="dialog"][aria-label$="详情"]>div:nth-child(2){padding:16px}
+ [role="dialog"][aria-label$="详情"] .grid:has(>a){grid-template-columns:repeat(4,minmax(0,1fr));max-height:48dvh;gap:8px}
+ [role="dialog"][aria-label$="详情"] .grid>a{min-height:46px;display:flex;align-items:center;justify-content:center;font-size:13px}
+ .lt-episode-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;max-height:52dvh!important;scroll-margin-top:76px}
+ .lt-episode-grid button{min-height:46px;font-size:13px}
+ #lt-mobile-nav{position:fixed;inset:auto 0 0;z-index:45;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));background:rgb(var(--c-surface)/.96);border-top:1px solid rgb(var(--c-line));backdrop-filter:blur(18px);box-shadow:0 -8px 32px #00000012}
+ #lt-mobile-nav>*{min-width:0;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;font-size:11px;font-weight:500;color:rgb(var(--c-muted));text-decoration:none}
+ #lt-mobile-nav svg{width:22px;height:22px;stroke-width:1.8}
+ #lt-mobile-nav>[aria-current=page]{color:rgb(var(--c-accent));background:rgb(var(--c-accent)/.1)}
+ #lt-mobile-nav>[data-action=search]{color:rgb(var(--c-accent))}
+ body:has([role=dialog][aria-modal=true]) #lt-mobile-nav,body:has([role=alertdialog]) #lt-mobile-nav,html.lt-keyboard-open #lt-mobile-nav,body:has(.art-fullscreen-web) #lt-mobile-nav{display:none}
+ @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+}
+
+@media(max-width:767px){
+#lt-mobile-nav[hidden]{display:none!important}
+.lt-watch-header>div{height:auto;min-height:64px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+.lt-watch-header>div>div.min-w-0{flex:1}
+.lt-watch-header>div>div.ml-auto{width:100%;display:grid;grid-template-columns:1fr 1fr}
+#mobile-episodes{scroll-margin-top:140px}
+[role="dialog"][aria-label="更多功能"]{max-width:none!important;width:100%;height:100dvh}
+[role="dialog"][aria-label="更多功能"]>div:first-child{padding-top:max(12px,env(safe-area-inset-top))}
+.lt-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lt-menu-grid>*{display:flex;align-items:center;gap:10px;padding:14px 12px;min-height:58px;background:rgb(var(--c-chip));border:1px solid rgb(var(--c-line));border-radius:14px;color:rgb(var(--c-content));font-size:14px;text-decoration:none}
+.lt-menu-grid svg{width:22px;height:22px;color:rgb(var(--c-accent))}
+}

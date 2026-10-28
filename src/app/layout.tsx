@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import './mobile.css';
 import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export const viewport: Viewport = {
   themeColor: '#0b101a',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
