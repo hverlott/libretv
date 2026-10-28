@@ -1,152 +1,127 @@
-# LibreTV 个人定制版
+# LibreTV 个人定制版：安卓 Termux 家庭影音与漫画服务
 
-**把闲置的安卓手机，变成一台 24 小时在线的私人影视库。**
+[English](README.en.md) · [安卓部署](ANDROID.md) · [常见问题](FAQ.md) · [本地部署](DEPLOY_LOCAL.md) · [隐私说明](PRIVACY.md)
 
-不用开电脑、不用买 NAS、不用刷机 root。一台吃灰的安卓手机插上充电器，
-局域网里的电脑、电视、平板、手机打开浏览器就能用。功耗约 1W，一年电费十几块。
+**hverlott/libretv 是基于 LibreSpark/LibreTV v2.19.7 二次开发的自托管 Web 应用，集成视频搜索与播放、M3U/IPTV 直播、在线及本地漫画阅读、评分补全和局域网访问。** 可以把闲置安卓手机通过 Termux 用作家庭服务端，也支持 Windows 和 Docker 部署；客户端使用浏览器访问。
 
-> 基于 [LibreSpark/LibreTV](https://github.com/LibreSpark/LibreTV) v2.19.7 的个人修改版，
-> 按上游 **AGPL-3.0-or-later** 发布（见 [LICENSE](LICENSE)）。
+Android Termux home media server · self-hosted video search · IPTV player · manga reader
 
----
+本项目由 [hverlott](https://github.com/hverlott) 维护，采用 [AGPL-3.0-or-later](LICENSE)。这是独立修改版，与[上游 LibreTV](https://github.com/LibreSpark/LibreTV) 的功能和发布版本分别维护。
 
-## 为什么是闲置手机
+## 它能解决什么问题？
 
-| 方案 | 硬件成本 | 开机即用 | 功耗 | 主要麻烦 |
-|---|---|---|---|---|
-| **闲置安卓手机** | **¥0** | ✅ 常亮待机 | **~1W** | 免刷机免 root，有电池还能扛住断电 |
-| 每次开电脑 | ¥0 | ❌ 要等开机 | 60–200W | 用完还得关，机器还吵 |
-| NAS / 迷你主机 | ¥800 起 | ✅ | 20–40W | 要装系统、配 Docker、占地方 |
-| 云服务器 | ¥60/月起 | ✅ | — | 看片走公网流量要花钱，一部 4K 几十块 |
+- **闲置安卓手机再利用**：手机运行服务，同一局域网的电脑、平板、电视浏览器访问；部署完成后，电脑无需持续开机。
+- **家庭浏览器影音入口**：把自行配置的视频接口与 M3U 直播列表放到同一界面，支持搜索、播放、选集和换源。
+- **漫画阅读**：支持 MangaDex、再漫画，以及自己提供的图片目录、ZIP、CBZ、TAR.GZ 本地漫画。
+- **内容整理**：可选 TMDB / 豆瓣评分补全、内容过滤、历史与收藏。
 
-实测数据（Android 14 + Termux）：
+本项目提供软件和资源接口接入能力，不是影视内容托管站。第三方接口、作品和频道的可用性与授权由相应提供方决定；接口数量不等于独立片库数量。
 
-| 指标 | 实测值 |
-|---|---|
-| 内存占用 | **100–140 MB**（单进程，零原生模块） |
-| 冷启动 | **340ms** |
-| 局域网页面响应 | ~90ms |
-| 局域网吞吐 | **37 Mbps**（1080p 无压力） |
-| 部署体积 | 49 MB |
+## 先选哪个分支？
 
-> 前提是**手机原本就闲置**。为这事专门买台机器，不如直接买千元档迷你主机。
+| 分支 | 用途 | 获取方式 |
+|---|---|---|
+| [`main`](https://github.com/hverlott/libretv/tree/main) | 默认分支，项目通用功能与说明 | `git clone https://github.com/hverlott/libretv.git` |
+| [`android-mobile`](https://github.com/hverlott/libretv/tree/android-mobile) | 安卓与手机浏览器优化：底部导航、全屏设置、漫画阅读控制、Termux 守护脚本 | `git clone --branch android-mobile https://github.com/hverlott/libretv.git` |
 
----
+两个分支独立更新。使用手机优化功能请明确选择 `android-mobile`；旧 Release 不一定包含该分支最新改动。
 
-## 手机部署：五步
+## 安卓手机如何部署 LibreTV？
+
+采用**电脑构建、手机运行**的方式。安卓侧安装 Termux 和 Node.js，不需要 root 或刷机；手机运行打包后的 JavaScript，避免在 Termux 中直接构建 Next.js 时的平台原生依赖兼容问题。
+
+在电脑上准备源码与依赖：
 
 ```bash
-# 1. 装 Termux（F-Droid / GitHub 版，别用 Play 商店那个已废弃的）
-# 2. 装 Node（Termux 内）
-pkg update && pkg install -y nodejs-lts
-# 3. 电脑上打包 —— 不要在手机上构建，Termux 是 bionic libc，装不了 Next 的 SWC
-npm run build:standalone && npm run pack:standalone
-# 4. 推到手机（USB 调试 + run-as，全自动）
-npm run deploy:android
-# 5. 手机上启动（Termux 内）
-lb          # 启动：崩溃自动重启 + 唤醒锁
-lbr         # 改完配置后重启
-lbclean     # 清理日志与评分缓存
-```
-
-完整步骤、ColorOS 系统设置、以及踩过的坑见 **[ANDROID.md](ANDROID.md)**。
-
----
-
-## 与原版的差异
-
-### 漫画模块
-- **双源**：MangaDex（国际，分类/标签/地区筛选）+ 再漫画（中文，默认源）
-- **分级筛选**：安全 / 建议 / 限制三档，按评级向下累积；`BLOCKED_TAGS` 服务端硬排除
-- **本地漫画库**：目录、`zip`、`cbz`、`tar.gz`，支持嵌套包与 GNU 长路径；
-  按体积分流（小包内存、大包流式索引），页序按自然排序重排
-
-### 评分补全
-- **双源**：TMDB（需免费 API key）+ 豆瓣（免 key，反爬严格）
-- 标题清洗与相似度匹配，宁缺毋滥 —— 低于阈值宁可不给分
-- 按源限流与指数退避；缓存键 HMAC 派生，**磁盘不留明文片名**
-
-### 访问与部署
-- **局域网访问**：`LAN_ACCESS=1` 一键开放，自动枚举网卡并给出可访问地址；
-  站内 `/system` 页可视化管理，弱密码会告警
-- **Windows**：`启动系统.bat` / `停止系统.bat` / `查看状态.bat`（底层 `scripts/ctl.mjs`）
-- **Docker**：两阶段构建 + standalone 输出，镜像约 200MB
-- **安卓（Termux）**：见上文，免刷机免 root
-
-### 隐私
-- 播放走**同源代理** `/api/proxy`，上游只看到本机（或代理）
-- 敏感参数放 URL **片段**（`#`），不进服务器日志、不进 Referer
-- 本地加密与 HMAC 盲索引，密钥只在内存；可选 DoH 解析
-
-### 其他
-- **导航**：自维护会话栈，修复桌面客户端 `/app` 前缀丢失与「返回上一级」
-- **内容筛选**：成人词表硬过滤 + 评分门槛（唯一词表来源 `src/lib/adult-keywords.ts`）
-- **服务端批量下载**：选最高码率、AES-128 解密、fMP4 转封装、队列与断点
-- **直播测活**：入口 / master / 分片四级递进探测，短缓存
-
----
-
-## 本地开发
-
-```bash
+git clone --branch android-mobile https://github.com/hverlott/libretv.git
+cd libretv
 npm install
-cp .env.example .env     # 至少填 PASSWORD
-npm run dev              # http://localhost:8080
+cp .env.example .env
+# 编辑 .env，设置自己的 PASSWORD 后再启动或打包。
+npm run build:standalone
+npm run pack:standalone
 ```
 
-生产模式：`npm run build && npm start`
+然后按 [ANDROID.md 的部署说明](ANDROID.md) 将运行包传到手机，在 Termux 中配置 `.env` 并启动。`npm run deploy:android` 是可选的 ADB 辅助脚本，需要 USB 调试授权，以及允许 `run-as com.termux` 的安装版本；不满足条件时需手动复制运行包。不要将普通 Termux 安装都视为支持 `run-as`。
 
----
+`android-mobile` 提供单实例启动脚本与崩溃退避重启。长期运行还取决于手机厂商的后台管理、电源、网络及 Termux:Boot 配置；并不保证所有手机都能无干预常驻。
 
-## 关键配置
+## Windows、Docker 和本地开发
 
-`.env` 里最常改的几项（完整说明见 `.env.example`）：
-
-| 变量 | 说明 |
-|---|---|
-| `PASSWORD` | 访问密码，**必填**。局域网开放时它是唯一防线，8 位以上 |
-| `PORT` | 监听端口，默认 `8080` |
-| `LAN_ACCESS` | `1` 允许局域网设备访问；默认仅本机 |
-| `BIND_HOST` | 直接指定绑定地址，优先级高于 `LAN_ACCESS` |
-| `TMDB_API_KEY` | 可选。填了走 TMDB 补全评分（50 次/秒）；不填降级到豆瓣 |
-| `RATING_PROVIDER` | `auto` / `tmdb` / `douban` / `none` |
-| `LOCAL_MANGA_DIR` | 本地漫画库根目录，留空则不启用 |
-
----
-
-## 测试
+在电脑上安装 Node.js 与 npm 后：
 
 ```bash
-npm test                 # 单元测试
-npm run test:e2e:rating  # 评分接口端到端
-npm run test:e2e:lan     # 局域网访问端到端
+git clone https://github.com/hverlott/libretv.git
+cd libretv
+npm install
+cp .env.example .env
+# 编辑 .env，修改 PASSWORD。
+npm run dev
+# 浏览器打开 http://localhost:8080
 ```
 
-端到端测试用 Playwright（`channel: 'msedge'`），需要本机有 Edge。
+生产运行：`npm run build && npm start`。Windows 也可使用仓库中的 `启动系统.bat`、`停止系统.bat` 和 `查看状态.bat`，详见 [本地部署与控制](DEPLOY_LOCAL.md)。
 
----
+Docker 用户可以从当前源码构建：配置 `.env` 后执行 `docker compose up -d --build`。仓库 Compose 的默认镜像名指向上游；直接拉取上游镜像不会自动包含本修改版功能。自定义源、本地漫画目录和持久化目录需按自己的部署配置。
 
-## 致谢
+内存、功耗、启动时间和可播放码率取决于设备、版本、网络及来源，本仓库不提供跨设备性能承诺。
 
-这个项目能存在，完全是因为上游作者把他们的工作开源了出来。
-本仓库里的播放器、采集站解析、同源代理这些核心设计，源头都在那里。
+## 主要功能与实现
 
-我做的只是在自己那台吃灰的手机上，按自己的使用习惯改了些东西：
-加了漫画、补了评分、修了导航、把部署搬到了 Termux。**没有上游，这一切无从谈起。**
+| 功能 | 能力与边界 | 文档或实现入口 |
+|---|---|---|
+| 视频搜索与播放 | 多接口搜索、选集、换源；ArtPlayer + hls.js | [播放器页面](src/app/watch) |
+| M3U / IPTV 直播 | 直播列表接入、节目单及可用性探测；频道可能失效 | [直播页面](src/app/live) |
+| 在线漫画 | MangaDex + 再漫画，分类浏览与章节阅读 | [漫画页面](src/app/manga)、[漫画来源说明](MANGA_SOURCES.md) |
+| 本地漫画 | 图片目录与压缩包，需服务端能读取指定路径 | `LOCAL_MANGA_DIR`、[常见问题](FAQ.md) |
+| 手机阅读器 | 安卓分支提供章节搜索、单页/条漫切换、模式记忆和图片重试 | [安卓分支说明](https://github.com/hverlott/libretv/blob/android-mobile/ANDROID.md) |
+| 评分补全 | 可选 TMDB / 豆瓣，匹配与缓存；不保证每项都有评分 | `RATING_PROVIDER` |
+| 局域网与系统管理 | 绑定地址配置，系统页展示运行信息 | [系统页面](src/app/system) |
+| 数据与隐私 | 浏览器保存历史、收藏及设置，部分缓存在服务端；第三方请求依功能而定 | [PRIVACY.md](PRIVACY.md) |
 
-如果这个项目对你有用，建议先去给上游点个 Star：
-**[LibreSpark/LibreTV](https://github.com/LibreSpark/LibreTV)**
+技术栈：Next.js App Router、React、TypeScript、Tailwind CSS、ArtPlayer、hls.js。依赖与命令以 [package.json](package.json) 为准。
 
-## 许可
+## 常用配置
 
-本项目是 [LibreSpark/LibreTV](https://github.com/LibreSpark/LibreTV) 的**修改版本**，
-按上游的 **AGPL-3.0-or-later** 发布，完整许可证见 [LICENSE](LICENSE)。
+完整选项见 [.env.example](.env.example)。下列为用途说明，不含个人配置：
 
-- 原始代码的著作权归 LibreTV 原作者所有
-- 本仓库的修改部分同样以 AGPL-3.0 授权，任何人可自由使用、修改、分发
-- 按 AGPL 第 13 条：若通过计算机网络向他人提供服务，应向其提供对应的完整源代码
+| 配置 | 用途 |
+|---|---|
+| `PASSWORD` | 必填访问密码；修改示例默认值，不要上传 `.env` |
+| `LAN_ACCESS` / `BIND_HOST` | 由启动方式决定监听地址；局域网部署需检查实际绑定与防火墙 |
+| `DEFAULT_SOURCES` | 部署者预置的视频接口 |
+| `DEFAULT_LIVE_SOURCES` | 部署者预置的 M3U 直播列表 |
+| `LOCAL_MANGA_DIR` | 服务端可读的本地漫画目录，留空则不启用 |
+| `RATING_PROVIDER` | `auto` / `tmdb` / `douban` / `none` |
+| `TMDB_API_KEY` | 使用 TMDB 评分时的可选密钥 |
 
-**这不构成「盗版」** —— 上游以 AGPL 明确授权他人修改和再分发，前提是保留同样的许可与署名。
-本项目完整保留了 LICENSE、标注了来源、公开了全部修改后的源码，符合许可证要求。
+## 常见问题速答
 
-仅供个人学习与自用。
+**需要买 NAS 或让电脑一直开着吗？** 不需要。部署到安卓后，手机承担服务端工作；首次构建和后续源码更新通常仍在电脑完成。
+
+**手机、电视和平板会自动同步观看记录吗？** 不会。历史、收藏和偏好主要存储在各浏览器，换设备或访问地址不会自动共享。详见 [FAQ](FAQ.md)。
+
+**为什么搜索或直播有时不可用？** 上游接口可能超时、限流、失效或存在地区限制。可尝试其他已配置来源，不能据此保证所有资源可播放。
+
+**这是 LibreTV 官方安卓 App 吗？** 不是。这是独立修改版的 Web 服务，可部署到 Termux；手机浏览器界面不是原生 APK。
+
+## 开发、反馈与项目入口
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+```
+
+部分端到端测试需要运行中的服务及相应浏览器，具体命令见 [package.json](package.json)。
+
+- [源代码与版本分支](https://github.com/hverlott/libretv)
+- [发布记录](https://github.com/hverlott/libretv/releases)：请核对发布版本及所含功能
+- [问题反馈](https://github.com/hverlott/libretv/issues)：说明分支、部署方式、复现步骤，日志请先去除密码、密钥和私人地址
+- [English overview](README.en.md) · [完整 FAQ](FAQ.md) · [机器可读文档索引](llms.txt)
+
+## 致谢与许可
+
+感谢 [LibreSpark/LibreTV](https://github.com/LibreSpark/LibreTV) 及其贡献者提供原始项目。本仓库在其基础上扩展漫画、评分、导航和部署能力；原始代码的著作权归对应作者所有。
+
+代码按 [AGPL-3.0-or-later](LICENSE) 发布，修改与再分发请遵循许可证。软件许可证不授予第三方影视、漫画或直播内容的使用权。
