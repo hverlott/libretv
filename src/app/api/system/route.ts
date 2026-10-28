@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { guardRequest } from '@/lib/api-guard';
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { getLanInfo, resolveBindHost } from '@/lib/lan-access';
 import { getEnvFileValue } from '@/lib/env-file';
@@ -28,6 +28,9 @@ const CTL_SCRIPT = join(process.cwd(), 'scripts', 'ctl.mjs');
 
 /** 站内控制页用的端口：默认与主服务一致 */
 function servicePort(): number {
+  // 进程自身的 PORT 最准：手机上（Termux）不会生成 .runtime/libretv.port
+  const envPort = Number(process.env.PORT);
+  if (Number.isFinite(envPort) && envPort > 0) return envPort;
   try {
     if (existsSync(PORT_FILE)) {
       const p = Number(readFileSync(PORT_FILE, 'utf-8').trim());
@@ -77,10 +80,18 @@ export interface SystemStatusResponse {
 
 function getStatus(): SystemStatusResponse {
   const port = servicePort();
-  const pid = readPid();
-  const running = pid !== null && isAlive(pid);
 
-  let startedAt: number | null = null;
+  /**
+   * 这个函数运行在服务进程内部 —— 能处理这个请求，就证明服务本身在运行。
+   * 因此用 process 自身的 pid / uptime 判断，比读 .runtime/libretv.pid 可靠得多：
+   * 那个 pid 文件只有 Windows 的 ctl.mjs 会写，手机上由 Termux:Boot 直接拉起 node，
+   * 从来不会有这个文件，原来会误报「未运行」。
+   */
+  const selfPid = process.pid;
+  const selfUptimeMs = Math.round(process.uptime() * 1000);
+
+  // startedAt 优先取 ctl.mjs 写的启动时间（托管场景更精确），否则按 uptime 反推
+  let startedAt = Date.now() - selfUptimeMs;
   try {
     if (existsSync(STARTED_FILE)) {
       const t = Number(readFileSync(STARTED_FILE, 'utf-8').trim());
@@ -91,11 +102,11 @@ function getStatus(): SystemStatusResponse {
   }
 
   return {
-    running,
-    pid: running ? pid : null,
+    running: true,
+    pid: selfPid,
     port,
     startedAt,
-    uptimeMs: startedAt ? Math.max(0, Date.now() - startedAt) : null,
+    uptimeMs: Math.max(0, Date.now() - startedAt),
     root: process.cwd(),
     autostart: isAutostartEnabled(),
     nodeVersion: process.version,
@@ -121,6 +132,18 @@ function isAutostartEnabled(): boolean {
       'Startup'
     );
     return existsSync(join(startupDir, 'LibreTV.cmd'));
+  }
+  // Termux：开机自启由 Termux:Boot 负责（~/.termux/boot/*.sh），与 .profile 无关
+  if (process.platform === 'android') {
+    const bootDir = join(process.env.HOME ?? '', '.termux', 'boot');
+    try {
+      if (existsSync(bootDir)) {
+        return readdirSync(bootDir).some((f) => f.endsWith('.sh'));
+      }
+    } catch {
+      /* 忽略 */
+    }
+    return false;
   }
   const profile = join(process.env.HOME ?? '', '.profile');
   try {
@@ -219,6 +242,24 @@ export async function POST(req: Request) {
   }
 
   const status = getStatus();
+
+  /**
+   * 手机（Termux）上不能走 ctl.mjs：它是 Windows 专用实现（taskkill / 启动文件夹）。
+   * 与其点了没反应，不如直接说清该怎么做。
+   */
+  if (process.platform === 'android' && action !== 'start') {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          action === 'stop'
+            ? '手机上请打开 Termux：pkill -f start-server.sh && pkill -9 -f next-server'
+            : '手机上请打开 Termux 执行：lbr（重启）',
+        status,
+      },
+      { status: 501 }
+    );
+  }
 
   if (action === 'stop') {
     if (!status.running) {
