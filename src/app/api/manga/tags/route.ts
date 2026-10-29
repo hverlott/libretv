@@ -1,3 +1,4 @@
+import { isWebtoonSource } from '@/lib/webtoon-parser';
 import { NextResponse } from 'next/server';
 import { guardRequest } from '@/lib/api-guard';
 import { getMangaTags } from '@/lib/mangadex';
@@ -22,6 +23,8 @@ export async function GET(req: Request) {
 
   const sp = new URL(req.url).searchParams;
   const source = resolveMangaSource(sp.get('source'));
+
+  if (isWebtoonSource(source)) return NextResponse.json({ groups: [] });
 
   if (source === 'zaimanhua') {
     return NextResponse.json(
