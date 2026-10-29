@@ -1,5 +1,6 @@
 'use client';
 
+import { readMangaProgress, saveMangaProgress } from '@/lib/manga-progress';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -33,9 +34,9 @@ function MangaReadContent() {
   const [chapterLimit, setChapterLimit] = useState(100);
   const pageFrame = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    try { setWebtoon(localStorage.getItem('libretv-manga-reading-mode') === 'webtoon'); } catch { /* private storage */ }
+    try { setWebtoon(searchParams.get('resume') !== '1' && localStorage.getItem('libretv-manga-reading-mode') === 'webtoon'); } catch { /* private storage */ }
     setModeReady(true);
-  }, []);
+  }, [searchParams]);
   useEffect(() => {
     if (!modeReady) return;
     try { localStorage.setItem('libretv-manga-reading-mode', webtoon ? 'webtoon' : 'single'); } catch { /* private storage */ }
@@ -73,8 +74,26 @@ function MangaReadContent() {
     if (!webtoon && page > 0) pageFrame.current?.scrollIntoView({ block: 'start' });
   }, [page, webtoon]);
 
-  // 切章时回到第 1 页
-  useEffect(() => setPage(0), [chapterId]);
+  const [restoredChapter, setRestoredChapter] = useState('');
+  useEffect(() => {
+    if (!images.length) return;
+    const saved = searchParams.get('resume') === '1' ? readMangaProgress(mangaId) : undefined;
+    setPage(saved?.chapterId === chapterId ? Math.min(saved.page, images.length - 1) : 0);
+    setRestoredChapter(chapterId);
+  }, [chapterId, mangaId, images.length, searchParams]);
+  useEffect(() => {
+    if (restoredChapter !== chapterId || !images.length || !manga) return;
+    saveMangaProgress({ mangaId, chapterId, page, updatedAt: Date.now() });
+  }, [chapterId, mangaId, page, restoredChapter, images.length, manga]);
+  useEffect(() => {
+    if (!webtoon || restoredChapter !== chapterId || !images.length) return;
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a,b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible[0]) setPage(Number((visible[0].target as HTMLElement).dataset.mangaPage));
+    }, { rootMargin: '-10% 0px -60% 0px', threshold: 0 });
+    document.querySelectorAll('[data-manga-page]').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [webtoon, chapterId, images.length, restoredChapter]);
 
   const goChapter = useCallback(
     (cid: string) => {
@@ -83,6 +102,7 @@ function MangaReadContent() {
         scroll: true,
       });
       setCatalogOpen(false);
+      setRestoredChapter('');
       setPage(0);
     },
     [router, basePath, mangaId]
@@ -225,7 +245,7 @@ function MangaReadContent() {
         {/* 条漫模式：竖向连续滚动 */}
         {!loading && webtoon && images.length > 0 && (
           <div className="space-y-1">
-            {images.map((src, i) => <MangaReaderImage key={`${chapterId}-${i}`} src={src} page={i + 1} lazy={i > 1} />)}
+            {images.map((src, i) => <div key={`${chapterId}-${i}`} data-manga-page={i}><MangaReaderImage src={src} page={i + 1} lazy={i > 1} /></div>)}
           </div>
         )}
 
