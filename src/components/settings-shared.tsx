@@ -305,10 +305,13 @@ export function HealthBadge({ sourceKey }: { sourceKey: string }) {
     );
   }
 
+  const samples = entry.samples ?? [entry.ok];
+  const summary = `最近 ${samples.length} 次接口成功 ${Math.round(samples.filter(Boolean).length / samples.length * 100)}%`;
+  const lastSuccess = entry.lastSuccessAt ? new Date(entry.lastSuccessAt).toLocaleString() : '暂无记录';
   if (entry.ok) {
     return (
-      <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/15 text-success shrink-0" title={`上次搜索 ${entry.ms}ms`}>
-        ✓ {entry.ms}ms
+      <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/15 text-success shrink-0" title={`${summary}；最近成功 ${lastSuccess}。接口成功不代表影片可播放。`}>
+        ✓ {entry.ms ?? '—'}ms · {summary}
       </span>
     );
   }
