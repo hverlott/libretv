@@ -8,7 +8,7 @@
  * 这里只放常量与纯函数，不 import 任何网络相关模块。
  */
 
-export type MangaSourceId = 'mangadex' | 'zaimanhua';
+export type MangaSourceId = 'mangadex' | 'zaimanhua' | 'dongman' | 'webtoon-zh' | 'webtoon-en';
 
 export interface MangaSourceMeta {
   id: MangaSourceId;
@@ -25,7 +25,10 @@ export interface MangaSourceMeta {
  * MangaDex 中文译本只有 642 部（英文 4.9 万），留着做国际内容补充。
  */
 export const MANGA_SOURCES: MangaSourceMeta[] = [
-  { id: 'zaimanhua', label: '再漫画', hint: '中文 · 约 2 万部，含国漫与汉化' },
+  { id: 'zaimanhua', label: '再漫画', hint: '中文 · 国漫与汉化' },
+  { id: 'dongman', label: '咚漫 · 简中', hint: '简体中文 · 官方公开网页章节' },
+  { id: 'webtoon-zh', label: 'WEBTOON · 繁中', hint: '繁体中文 · 官方公开网页章节' },
+  { id: 'webtoon-en', label: 'WEBTOON · 英文', hint: '英文 · 官方公开网页章节' },
   { id: 'mangadex', label: 'MangaDex', hint: '国际社区 · 英文为主，中文较少' },
 ];
 

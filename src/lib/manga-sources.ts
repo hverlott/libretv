@@ -1,3 +1,5 @@
+import { isWebtoonSource, decodeWebtoonId } from './webtoon-parser';
+import { browseWebtoon, getWebtoonDetail, getWebtoonPages } from './webtoon';
 /**
  * 漫画源注册表与统一分发。
  *
@@ -43,11 +45,13 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 /** 按漫画 id 推断源：纯数字是再漫画，UUID 是 MangaDex */
 export function detectMangaSource(id: string): MangaSourceId {
+  if (decodeWebtoonId(id)) return decodeWebtoonId(id)!.source;
   return isZaiComicId(id) ? 'zaimanhua' : 'mangadex';
 }
 
 /** 按章节 id 推断源：再漫画的章节 id 带 `z{d}.{d}` 前缀 */
 export function detectChapterSource(chapterId: string): MangaSourceId {
+  if (decodeWebtoonId(chapterId)?.episode) return decodeWebtoonId(chapterId)!.source;
   return decodeZaiChapter(chapterId) ? 'zaimanhua' : 'mangadex';
 }
 
@@ -70,6 +74,7 @@ export async function searchMangaAny(
     signal?: AbortSignal;
   } = {}
 ): Promise<{ items: MangaItem[]; total: number }> {
+  if (isWebtoonSource(source)) return browseWebtoon(source, { ...opts, keyword });
   if (source === 'zaimanhua') {
     return searchZaimanhua(keyword, { page: opts.page, signal: opts.signal });
   }
@@ -101,6 +106,7 @@ export async function browseMangaAny(
     signal?: AbortSignal;
   } = {}
 ): Promise<{ items: MangaItem[]; total: number }> {
+  if (isWebtoonSource(source)) return browseWebtoon(source, params);
   if (source === 'zaimanhua') {
     const zai: ZaiBrowseParams = {
       // 再漫画的题材是单选，取第一个标签
@@ -154,6 +160,8 @@ export async function getMangaDetailAny(
     };
   }
 
+  if (isWebtoonSource(source)) return getWebtoonDetail(id, opts.signal);
+
   // 详情与章节必须用同一套分级：限制级作品的 feed 不带对应档位会返回 0 章
   const [detail, chapters] = await Promise.all([
     getMangaDetail(id, {
@@ -188,6 +196,8 @@ export async function getChapterImageUrls(
     if (!decoded) throw new Error('再漫画章节 id 非法');
     return getZaimanhuaChapterPages(decoded.comicId, decoded.chapterId, { signal: opts.signal });
   }
+
+  if (isWebtoonSource(source)) return getWebtoonPages(chapterId, opts.signal);
 
   const pages = await getChapterPages(chapterId, { signal: opts.signal });
   return pages.files

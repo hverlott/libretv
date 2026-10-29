@@ -121,6 +121,9 @@ export async function handleProxyRequest(req: Request, targetUrl: string): Promi
     if (isDoubanHost(host)) {
       headers.Referer = 'https://movie.douban.com/';
     }
+    else if (host === 'webtoon-phinf.pstatic.net' || host === 'swebtoon-phinf.pstatic.net') {
+      headers.Referer = 'https://www.webtoons.com/';
+    }
     // MangaDex 的图片 CDN（*.mangadex.network）会校验 Referer：
     // 不带 Referer 一律回 404（且 body 为空，极易被误判成「链接失效」）。
     // 实测带上 https://mangadex.org/ 即正常返回 image/jpeg。

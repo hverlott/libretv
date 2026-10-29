@@ -472,6 +472,8 @@ export interface MangaTag {
 
 /** 漫画条目（搜索 / 详情共用） */
 export interface MangaItem {
+  /** Canonical public catalog URL, when supplied by the source. */
+  sourceUrl?: string;
   id: string;
   title: string;
   altTitles: string[];
