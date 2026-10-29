@@ -179,6 +179,9 @@ export interface SourceDisableEvent {
 
 /** 点播源健康度条目（按 sourceKey），随搜索结果滚动更新 */
 export interface SourceHealthEntry {
+  samples?: boolean[];
+  lastSuccessAt?: number;
+  averageMs?: number;
   ok: boolean;
   ms?: number;
   error?: string;
@@ -716,6 +719,9 @@ export const useAppStore = create<AppState>()(
             : (prev?.disableCount ?? 0);
           // entry 覆盖旧记录：成功时停用标记随之消失（立即恢复）
           const entry: SourceHealthEntry = {
+            samples: [...(prev?.samples ?? []), o.ok].slice(-20),
+            lastSuccessAt: o.ok ? now : prev?.lastSuccessAt,
+            averageMs: o.ok && Number.isFinite(o.ms) ? Math.round((prev?.averageMs ?? o.ms!) * 0.7 + o.ms! * 0.3) : prev?.averageMs,
             ok: o.ok,
             ms: o.ms,
             error: o.error,
