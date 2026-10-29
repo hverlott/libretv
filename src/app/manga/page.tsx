@@ -44,6 +44,7 @@ function MangaContent() {
   /** 漫画源：省略时用默认源（再漫画） */
   const source = resolveMangaSource(searchParams.get('source'));
   const isZai = source === 'zaimanhua';
+  const isWebtoon = source === 'dongman' || source.startsWith('webtoon-');
 
   const sortRaw = (searchParams.get('sort') || 'latest') as MangaSortKey;
   const sort = (isZai ? ZAI_SORTS : MANGA_SORTS).some((s) => s.key === sortRaw) ? sortRaw : 'latest';
@@ -55,7 +56,7 @@ function MangaContent() {
   const yellowFilter = useAppStore((s) => s.yellowFilter);
   const ratingRaw = (searchParams.get('rating') || '').trim();
   // 再漫画没有分级字段，这一档只在 MangaDex 侧生效
-  const rating = !yellowFilter && !isZai && MANGA_RATINGS.some((r) => r.key === ratingRaw) ? ratingRaw : '';
+  const rating = !yellowFilter && !isZai && !isWebtoon && MANGA_RATINGS.some((r) => r.key === ratingRaw) ? ratingRaw : '';
   const tagKey = searchParams.get('tags') || '';
   const tags = useMemo(
     () => tagKey.split(',').map((s) => s.trim()).filter(Boolean),
@@ -67,7 +68,7 @@ function MangaContent() {
    * 开启时漫画侧连「含成人向」这个选项都不展示——与点播侧的成人源是同一套规则，
    * 免得出现「过滤开着但漫画这边还能手动打开」的割裂。
    */
-  const adultAllowed = !yellowFilter && !isZai;
+  const adultAllowed = !yellowFilter && !isZai && !isWebtoon;
   // 选了任一成人档位（含成人向 / 限制级）都算成人浏览，并要把档位透传给接口
   const includeAdult = adultAllowed && rating !== '';
 
@@ -241,9 +242,9 @@ function MangaContent() {
         <div className="mb-5">
           <h1 className="text-xl font-semibold text-content">漫画</h1>
           <p className="text-sm text-muted mt-1">
-            {isZai
-              ? '再漫画：中文漫画库，约 2 万部，可按地区（内地 / 日本 / 韩国 / 欧美 / 港台）、题材、受众、连载状态浏览。'
-              : 'MangaDex：国际漫画社区，英文内容为主（中文译本约 642 部）。可按题材、受众、连载状态、语言、原作地区浏览；搜索时英文 / 罗马音关键词命中率更高。'}
+            {isWebtoon ? '官方公开网页漫画目录，可直接阅读公开章节。搜索当前目录中的作品名称或作者；繁中源请使用繁体关键词。部分后续章节需前往官方平台登录、付费或使用 App。' : isZai
+              ? '再漫画：中文漫画库，可按地区（内地 / 日本 / 韩国 / 欧美 / 港台）、题材、受众、连载状态浏览。'
+              : 'MangaDex：国际漫画社区，英文内容为主。可按题材、受众、连载状态、语言、原作地区浏览；搜索时英文 / 罗马音关键词命中率更高。'}
           </p>
         </div>
 
@@ -311,10 +312,11 @@ function MangaContent() {
             onLoadMore={loadMore}
             onRetry={() => { void (isSearch ? searchQuery : browseQuery).refetch(); }}
             onOpen={openManga}
-            emptyHint={`没有找到「${q}」相关漫画。试试英文名称？`}
+            emptyHint={isWebtoon ? `当前公开目录中未找到「${q}」，可切换其他源或尝试当地语言名称。` : `没有找到「${q}」相关漫画。试试其他名称？`}
           />
         ) : (
           <>
+            {!isWebtoon && <>
             {/* 排序 */}
             <div className="flex flex-wrap gap-1.5 mb-3">
               {(isZai ? ZAI_SORTS : MANGA_SORTS).map((s) => (
@@ -428,6 +430,7 @@ function MangaContent() {
 
               </div>
             </details>
+            </>}
             <MangaGrid
               items={items}
               total={total}
