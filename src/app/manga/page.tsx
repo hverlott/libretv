@@ -1,5 +1,6 @@
 'use client';
 
+import { readMangaProgress, removeMangaProgress, type MangaProgress } from '@/lib/manga-progress';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -686,6 +687,8 @@ function MangaRoute() {
  * Next 路由表，而查询参数不需要——详情、搜索、阅读共用一套前缀逻辑。
  */
 function MangaDetail({ id }: { id: string }) {
+  const [savedProgress, setSavedProgress] = useState<MangaProgress>();
+  useEffect(() => { setSavedProgress(readMangaProgress(id)); }, [id]);
   const router = useRouter();
   const pathname = usePathname();
   const basePath = detectBasePath(pathname);
@@ -811,6 +814,11 @@ function MangaDetail({ id }: { id: string }) {
             </div>
           )}
 
+          {savedProgress && manga.chapters.some(c => c.id === savedProgress.chapterId) && <div className="mt-4 flex flex-wrap gap-2 items-center">
+            <button type="button" className="btn-primary rounded-lg px-4 py-2 text-sm" onClick={() => router.push(`${withBasePath('/manga/read', basePath)}?id=${encodeURIComponent(id)}&c=${encodeURIComponent(savedProgress.chapterId)}&resume=1`)}>继续阅读 · 第 {savedProgress.page + 1} 页（单页）</button>
+            <button type="button" className="btn-ghost text-xs" onClick={() => { removeMangaProgress(id); setSavedProgress(undefined); }}>清除此书进度</button>
+            <p className="w-full text-xs text-muted">进度仅保存在当前浏览器；继续阅读先定位单页，可再切换条漫。</p>
+          </div>}
           <div className="flex gap-2 mt-4">
             <button
               type="button"
