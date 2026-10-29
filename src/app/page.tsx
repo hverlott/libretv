@@ -1,5 +1,6 @@
 'use client';
 
+import { prioritizeSources } from '@/lib/source-priority';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -102,7 +103,7 @@ function HomeContent() {
     // 与 runSearch 的截断规则保持一致：顶栏搜索 / 手动构造长链接不会绕过上限
     queryFn: ({ signal }) => {
       setStreamedOutcomes([]);
-      return api.search(urlQuery.slice(0, 100), selectedSources, yellowFilter, {
+      return api.search(urlQuery.slice(0, 100), prioritizeSources(selectedSources, useAppStore.getState().sourceHealth), yellowFilter, {
         signal,
         // 逐源结算即更新：结果边搜边渲染，同时滚动健康度
         onSource: (outcome) => {
